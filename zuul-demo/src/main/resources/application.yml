@@ -1,0 +1,61 @@
+server:
+  port: 10010
+spring:
+  application:
+    name: zuul-service
+#zuul:
+#  routes:
+#    user-service: # 这里是路由id，随意写
+#      path: /user-service/** # 这里是映射路径
+#      url: http://127.0.0.1:8081 # 映射路径对应的实际url地址
+
+#day0306 http://localhost:10010/user-service匹配
+#day0306 http://localhost:10010/user-service/user/1
+#day0306 http://127.0.0.1:8081/user/1
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:10086/eureka
+    registry-fetch-interval-seconds: 5 # 获取服务列表的周期：5s
+  instance:
+    prefer-ip-address: true # 当调用getHostname获取实例的hostname时，返回ip而不是host名称
+    ip-address: 127.0.0.1 # 指定自己的ip信息，不指定的话会自己寻找
+    instance-id: ${spring.application.name}:${server.port}
+
+#zuul:  #修改zuul 因为导入了Eureka
+#  routes:
+#    user-service: # 这里是路由id，随意写
+#      path: /user-service/** # 这里是映射路径
+#      #url: http://127.0.0.1:8081 # 映射路径对应的实际url地址
+#      serviceId: user-service # 指定服务名称
+#      #day0307 http://localhost:10010/user-service/user/1
+
+#zuul:  #再次修改 简洁化
+#  routes:  #因为路由ID和服务名称一样 所以简写
+#    user-service: /user-service/** # 这里是映射路径
+#  ignored-services:  #隐藏不想让用户看到的服务
+#    - consumer-service #不暴露这个服务
+#day0308 http://localhost:10010/user-service/user/1
+#day0308 http://localhost:10010/consumer-service/consumer/1
+zuul:
+  routes:
+    user-service:
+      path: /user/**
+      serviceId: user-service
+      strip-prefix: false #不截取/user
+  prefix: /qz
+#改变熔断器与负载均衡的默认参数
+#熔断
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMillisecond: 6000 # 熔断超时时长：6000ms
+#负载均衡
+ribbon:
+  ConnectionTimeOut: 500 # 连接超时时间(ms)
+  ReadTimeOut: 4000 # 通信超时时间(ms)
+  MaxAutoRetriesNextServer: 2 # 同一服务不同实例的重试次数
